@@ -1,0 +1,36 @@
+import numpy as np
+from scipy.optimize import minimize
+
+# Generate synthetic data from a Gaussian distribution
+np.random.seed(0)
+data = np.random.normal(loc=5.0, scale=2.0, size=100)  # True mean = 5, std dev = 2
+
+# Step 1: Define the log-likelihood function for the Gaussian distribution
+def gaussian_log_likelihood(params, data):
+    mu, sigma = params  # Unpack parameters
+    if sigma <= 0:  # Sigma must be positive
+        return -np.inf
+    n = len(data)
+    log_likelihood = (
+        -n / 2 * np.log(2 * np.pi)  # Constant term
+        - n / 2 * np.log(sigma**2)  # Log of variance
+        - np.sum((data - mu)**2) / (2 * sigma**2)  # Data-dependent term
+    )
+    return log_likelihood
+
+# Step 2: Use a minimization function to maximize the log-likelihood
+# We minimize the negative log-likelihood for simplicity
+initial_guess = [0, 1]  # Initial guess for mu and sigma
+result = minimize(
+    lambda params: -gaussian_log_likelihood(params, data),  # Negative log-likelihood
+    x0=initial_guess,
+    bounds=[(None, None), (0.001, None)]  # No bounds for mu, sigma > 0
+)
+
+# Extract estimated parameters
+if result.success:
+    mu_mle, sigma_mle = result.x
+    print(f"Estimated mean (MLE): {mu_mle}")
+    print(f"Estimated standard deviation (MLE): {sigma_mle}")
+else:
+    print("Optimization failed.")
